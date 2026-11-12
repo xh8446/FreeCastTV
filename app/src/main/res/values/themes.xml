@@ -21,6 +21,17 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
+    <!-- 覆盖在播放页之上的页面（会员 / 帮助与反馈）：
+         用半透明窗口覆盖，播放页只 onPause 不 onStop，视频 Surface 不会被销毁，
+         返回时不需要重建解码画面，所以秒回不卡顿 -->
+    <style name="AppTheme.Overlay" parent="AppTheme">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.8</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
     <!-- 统一的行描述项（设置页里每一行） -->
     <style name="SettingsLine">
         <item name="android:layout_width">match_parent</item>

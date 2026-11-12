@@ -42,6 +42,7 @@ class CastService : Service(), CastEngine.Listener {
     private var ssdpServer: SsdpServer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: android.net.wifi.WifiManager.WifiLock? = null
+    private var networkCallback: android.net.ConnectivityManager.NetworkCallback? = null
     private var notificationManager: NotificationManager? = null
     private var lastNotificationText: String = ""
     private val netHandler = Handler(Looper.getMainLooper())
@@ -68,6 +69,29 @@ class CastService : Service(), CastEngine.Listener {
         CastEngine.addListener(this)
         // 开机自启时网络可能还没就绪，定时检查并在网络变化时重建 SSDP
         netHandler.postDelayed(netCheck, 4000L)
+        registerNetworkCallback()
+    }
+
+    /** 网络恢复（开机后连上 Wi-Fi / 网线）立刻重建发现服务，避免「软件没开搜不到」 */
+    private fun registerNetworkCallback() {
+        try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager ?: return
+            val callback = object : android.net.ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: android.net.Network) {
+                    netHandler.postDelayed({
+                        try {
+                            if (httpServer == null) startServers() else checkNetwork()
+                        } catch (e: Exception) {
+                            Log.w(TAG, "restart after network available failed", e)
+                        }
+                    }, 1500L)
+                }
+            }
+            cm.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (e: Exception) {
+            Log.w(TAG, "register network callback failed", e)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -81,6 +105,14 @@ class CastService : Service(), CastEngine.Listener {
 
     override fun onDestroy() {
         netHandler.removeCallbacks(netCheck)
+        try {
+            networkCallback?.let {
+                (getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager)
+                    ?.unregisterNetworkCallback(it)
+            }
+        } catch (_: Exception) {
+        }
+        networkCallback = null
         CastEngine.removeListener(this)
         try {
             ssdpServer?.stop()
@@ -265,8 +297,8 @@ class CastService : Service(), CastEngine.Listener {
             val power = getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "freecast:cast").apply {
                 setReferenceCounted(false)
-                // 投屏期间保持 CPU 唤醒，6 小时后自动释放，避免长期占用
-                acquire(6 * 60 * 60 * 1000L)
+                // 投屏期间保持 CPU 唤醒，24 小时后自动释放，避免长期占用
+                acquire(24 * 60 * 60 * 1000L)
             }
         } catch (e: Exception) {
             Log.w(TAG, "wake lock failed", e)

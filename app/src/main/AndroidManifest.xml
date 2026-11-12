@@ -88,7 +88,8 @@
 
         <activity
             android:name=".PaymentActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AppTheme.Overlay" />
 
         <activity
             android:name=".PushActivity"
@@ -98,6 +99,7 @@
         <activity
             android:name=".FeedbackActivity"
             android:exported="false"
+            android:theme="@style/AppTheme.Overlay"
             android:windowSoftInputMode="adjustResize" />
 
         <provider

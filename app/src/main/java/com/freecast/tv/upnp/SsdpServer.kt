@@ -271,25 +271,25 @@ class SsdpServer(
 
     private fun handleSearch(message: String, address: InetAddress, port: Int, endpoint: Endpoint) {
         val headers = parseHeaders(message)
+        // 部分 App 不发 MAN 头或大小写不规范，这里只要求是 M-SEARCH 就回应
         val man = headers["man"] ?: ""
-        if (!man.contains("ssdp:discover", ignoreCase = true)) return
-        val st = headers["st"]?.trim() ?: return
+        if (man.isNotEmpty() && !man.contains("ssdp:discover", ignoreCase = true)) return
+        val st = headers["st"]?.trim()?.takeIf { it.isNotEmpty() } ?: "ssdp:all"
 
         val targets = ArrayList<String>()
         when {
-            st == "ssdp:all" -> {
+            st.equals("ssdp:all", ignoreCase = true) -> {
                 targets.add("upnp:rootdevice")
                 targets.add(udn)
                 targets.add(DEVICE_TYPE)
                 targets.addAll(services)
             }
 
-            st == "upnp:rootdevice" -> targets.add("upnp:rootdevice")
-            st == udn -> targets.add(udn)
+            st.equals("upnp:rootdevice", ignoreCase = true) -> targets.add("upnp:rootdevice")
+            st.equals(udn, ignoreCase = true) -> targets.add(udn)
             // 兼容各种 MediaRenderer 变体
-            st.startsWith("urn:schemas-upnp-org:device:MediaRenderer") -> targets.add(DEVICE_TYPE)
-            st.equals("urn:schemas-upnp-org:device:MediaRenderer", ignoreCase = true) -> targets.add(DEVICE_TYPE)
-            st == "MediaRenderer" || st.equals("urn:schemas-upnp-org:service:AVTransport", ignoreCase = true) -> {
+            st.startsWith("urn:schemas-upnp-org:device:MediaRenderer", ignoreCase = true) -> targets.add(DEVICE_TYPE)
+            st.equals("MediaRenderer", ignoreCase = true) || st.equals("urn:schemas-upnp-org:service:AVTransport", ignoreCase = true) -> {
                 // 部分 App 省略前缀或只发服务名
                 targets.add(DEVICE_TYPE)
                 targets.add(services[0])
@@ -297,9 +297,16 @@ class SsdpServer(
                 targets.add(services[2])
             }
             services.any { it.equals(st, ignoreCase = true) } -> targets.add(st)
-            st.startsWith("urn:schemas-upnp-org:service:AVTransport") -> targets.add(services[0])
-            st.startsWith("urn:schemas-upnp-org:service:RenderingControl") -> targets.add(services[1])
-            st.startsWith("urn:schemas-upnp-org:service:ConnectionManager") -> targets.add(services[2])
+            st.startsWith("urn:schemas-upnp-org:service:AVTransport", ignoreCase = true) -> targets.add(services[0])
+            st.startsWith("urn:schemas-upnp-org:service:RenderingControl", ignoreCase = true) -> targets.add(services[1])
+            st.startsWith("urn:schemas-upnp-org:service:ConnectionManager", ignoreCase = true) -> targets.add(services[2])
+            else -> {
+                // 未知 ST（各厂商私有写法）：兜底把本机所有类型都报一遍，
+                // 否则像网飞猫这类 App 会直接搜不到设备
+                targets.add(DEVICE_TYPE)
+                targets.addAll(services)
+                targets.add("upnp:rootdevice")
+            }
         }
 
         for (target in targets) {
@@ -319,9 +326,11 @@ class SsdpServer(
             append("DATE: ").append(httpDate()).append("\r\n")
             append("EXT:\r\n")
             append("LOCATION: ").append(endpoint.location()).append("\r\n")
-            append("SERVER: Android UPnP/1.0 FreeCast/1.0\r\n")
+            append("SERVER: Linux/3.14 UPnP/1.0 DLNADOC/1.50 FreeCast/1.0\r\n")
             append("ST: ").append(st).append("\r\n")
             append("USN: ").append(usn).append("\r\n")
+            append("BOOTID.UPNP.ORG: 1\r\n")
+            append("CONFIGID.UPNP.ORG: 1\r\n")
             append("Content-Length: 0\r\n")
             append("\r\n")
         }
@@ -357,11 +366,13 @@ class SsdpServer(
         append("CACHE-CONTROL: max-age=").append(MAX_AGE).append("\r\n")
         if (nts == "ssdp:alive") {
             append("LOCATION: ").append(endpoint.location()).append("\r\n")
-            append("SERVER: Android UPnP/1.0 FreeCast/1.0\r\n")
+            append("SERVER: Linux/3.14 UPnP/1.0 DLNADOC/1.50 FreeCast/1.0\r\n")
         }
         append("NT: ").append(nt).append("\r\n")
         append("NTS: ").append(nts).append("\r\n")
         append("USN: ").append(usn).append("\r\n")
+        append("BOOTID.UPNP.ORG: 1\r\n")
+        append("CONFIGID.UPNP.ORG: 1\r\n")
         append("\r\n")
     }
 

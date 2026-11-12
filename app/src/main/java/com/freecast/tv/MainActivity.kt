@@ -528,8 +528,6 @@ class MainActivity : Activity(), CastEngine.Listener {
 
     override fun onResume() {
         super.onResume()
-        // 取消「切后台才暂停」的延迟任务：从会员/反馈/设置等页面返回时不暂停
-        hideHandler.removeCallbacks(pauseIfBackground)
         // 只有视图尚未绑定播放器时才重新绑定，避免每次返回都重建 Surface 造成几秒卡顿
         if (::playerView.isInitialized && playerView.player == null) CastEngine.attachView(playerView)
         // 从会员/反馈等页面切回播放画面：恢复音量并继续播放
@@ -544,16 +542,18 @@ class MainActivity : Activity(), CastEngine.Listener {
         hideHandler.postDelayed({ try { enterImmersiveMode() } catch (_: Throwable) {} }, 800L)
     }
 
-    /** 延迟判断：只有真正离开本应用（没有其他本应用页面在前台）时才暂停并静音。
-     *  进入会员/帮助与反馈等自有页面时不暂停，返回播放画面零等待。 */
-    private val pauseIfBackground = Runnable {
-        if (FreeCastApp.appVisible) return@Runnable
-        try {
-            if (CastEngine.isPlayingNow()) {
-                CastEngine.pauseAndMute()
-                pausedForLeave = true
-            }
-        } catch (_: Throwable) {}
+    override fun onPause() {
+        super.onPause()
+        // 进入会员 / 帮助与反馈 / 切其他 App 都立即暂停并静音；
+        // 这些页面是半透明窗口，播放页不会被销毁，返回时直接在原画面上继续播放
+        if (!isFinishing) {
+            try {
+                if (CastEngine.isPlayingNow()) {
+                    CastEngine.pauseAndMute()
+                    pausedForLeave = true
+                }
+            } catch (_: Throwable) {}
+        }
     }
 
     /** Android 10+ 后台拉不起 Activity：引导用户开启「显示在其他应用上层」，
@@ -581,16 +581,6 @@ class MainActivity : Activity(), CastEngine.Listener {
                 .setNegativeButton("以后再说", null)
                 .show()
         } catch (_: Throwable) {}
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // 离开播放画面（切其他 App / 锁屏）才暂停并静音；
-        // 进入本应用的会员、帮助与反馈页面不暂停，返回时不卡顿
-        if (!isFinishing) {
-            hideHandler.removeCallbacks(pauseIfBackground)
-            hideHandler.postDelayed(pauseIfBackground, 700L)
-        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
