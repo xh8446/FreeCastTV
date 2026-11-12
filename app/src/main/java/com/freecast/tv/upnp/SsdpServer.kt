@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.wifi.WifiManager
 import android.util.Log
 import com.freecast.tv.DeviceInfo
+import com.freecast.tv.Trace
 import java.net.DatagramPacket
 import java.net.Inet4Address
 import java.net.InetAddress
@@ -63,6 +64,17 @@ class SsdpServer(
 
     private val udn = "uuid:$uuid"
     private val sendLock = Any()
+    private val lastLogAt = HashMap<String, Long>()
+
+    /** 诊断日志节流：同一来源/操作 3 秒内只记一次，避免刷爆 trace.log */
+    private fun logThrottled(key: String, msg: String) {
+        val now = System.currentTimeMillis()
+        synchronized(lastLogAt) {
+            if (now - (lastLogAt[key] ?: 0L) < 3000L) return
+            lastLogAt[key] = now
+        }
+        Trace.log("SSDP", msg)
+    }
 
     @Volatile
     private var running = false
@@ -238,6 +250,13 @@ class SsdpServer(
                 continue
             }
             val text = String(packet.data, packet.offset, packet.length, Charsets.UTF_8)
+            val src = "${packet.address.hostAddress}:${packet.port}"
+            val firstLine = text.lineSequence().firstOrNull()?.trim() ?: ""
+            // 记录所有到达的 UDP 包（含非标准搜索），远程排障时能看到每个 App 实际发的发现协议
+            logThrottled(
+                "recv-$src-$firstLine",
+                "recv $src $firstLine st=${parseHeaders(text)["st"] ?: "-"}"
+            )
             if (text.startsWith("M-SEARCH", ignoreCase = true)) {
                 try {
                     handleSearch(text, packet.address, packet.port, endpoint)
@@ -300,6 +319,9 @@ class SsdpServer(
             st.startsWith("urn:schemas-upnp-org:service:AVTransport", ignoreCase = true) -> targets.add(services[0])
             st.startsWith("urn:schemas-upnp-org:service:RenderingControl", ignoreCase = true) -> targets.add(services[1])
             st.startsWith("urn:schemas-upnp-org:service:ConnectionManager", ignoreCase = true) -> targets.add(services[2])
+            // DIAL 协议（Netflix/YouTube 系投屏）按原样回应搜索的类型，
+            // 否则这类 App 只认 USN 里带自己 ST 的设备
+            st.contains("dial-multiscreen-org", ignoreCase = true) -> targets.add(st)
             else -> {
                 // 未知 ST（各厂商私有写法）：兜底把本机所有类型都报一遍，
                 // 否则像网飞猫这类 App 会直接搜不到设备
@@ -312,6 +334,10 @@ class SsdpServer(
         for (target in targets) {
             sendSearchResponse(target, address, port, endpoint)
         }
+        logThrottled(
+            "reply-${address.hostAddress}-$st",
+            "reply st=$st x${targets.size} -> ${address.hostAddress}:$port if=${endpoint.ip}"
+        )
     }
 
     private fun sendSearchResponse(st: String, address: InetAddress, port: Int, endpoint: Endpoint) {
