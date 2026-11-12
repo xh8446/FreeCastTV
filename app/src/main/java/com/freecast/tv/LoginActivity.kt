@@ -409,14 +409,66 @@ class LoginActivity : Activity() {
         if (forceUpdatePending || isFinishing) return
         forceUpdatePending = true
         val url = json.optString("updateUrl")
+        val backupUrl = json.optString("backupUrl")
         val versionName = json.optString("versionName")
         val changelog = json.optString("changelog").ifBlank { "请更新到最新版本后继续使用" }
         AlertDialog.Builder(this, R.style.DialogTheme)
             .setTitle(if (versionName.isBlank()) "发现新版本" else "发现新版本 $versionName")
-            .setMessage("$changelog\n\n未更新将自动退出软件。")
+            .setMessage("$changelog\n\n自动下载卡住不动时，请点「手动下载」用浏览器打开备用地址。")
             .setCancelable(false)
-            .setPositiveButton("立即更新") { _, _ ->
-                if (url.isBlank()) exitForNoUpdate() else startUpdateDownload(url)
+            .setPositiveButton("自动更新") { _, _ ->
+                if (url.isBlank()) {
+                    openUpdatePage(backupUrl)
+                } else {
+                    startUpdateDownload(url, backupUrl)
+                }
+            }
+            .setNeutralButton("手动下载") { _, _ ->
+                openUpdatePage(backupUrl.ifBlank { url })
+            }
+            .setNegativeButton("退出软件") { _, _ -> exitForNoUpdate() }
+            .show()
+    }
+
+    /** 用浏览器打开下载页；TV 无浏览器时复制链接并提示 */
+    private fun openUpdatePage(link: String) {
+        if (link.isBlank()) {
+            exitForNoUpdate()
+            return
+        }
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
+            android.widget.Toast.makeText(this, "已用浏览器打开下载页，下载后安装即可", android.widget.Toast.LENGTH_LONG).show()
+        } catch (_: Exception) {
+            try {
+                val cm = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText("update_url", link))
+                AlertDialog.Builder(this, R.style.DialogTheme)
+                    .setTitle("无法打开浏览器")
+                    .setMessage("本机没有可用浏览器。下载地址已复制到剪贴板：\n\n$link")
+                    .setCancelable(false)
+                    .setPositiveButton("退出软件") { _, _ -> exitForNoUpdate() }
+                    .show()
+            } catch (_: Exception) {
+                exitForNoUpdate()
+            }
+        }
+    }
+
+    /** 自动下载失败：不再直接退出，引导用浏览器手动下载 */
+    private fun showDownloadFailedDialog(error: String, link: String) {
+        if (isFinishing || isDestroyed) {
+            exitForNoUpdate()
+            return
+        }
+        AlertDialog.Builder(this, R.style.DialogTheme)
+            .setTitle("自动更新失败")
+            .setMessage("原因：$error\n\n可点「手动下载」用浏览器打开备用地址（蓝奏云）更新。")
+            .setCancelable(false)
+            .setPositiveButton("手动下载") { _, _ -> openUpdatePage(link) }
+            .setNeutralButton("重试") { _, _ ->
+                forceUpdatePending = false
+                checkForceUpdate()
             }
             .setNegativeButton("退出软件") { _, _ -> exitForNoUpdate() }
             .show()
@@ -432,7 +484,7 @@ class LoginActivity : Activity() {
     }
 
     /** 应用内下载 APK 并拉起系统安装器（带进度） */
-    private fun startUpdateDownload(url: String) {
+    private fun startUpdateDownload(url: String, fallbackLink: String = "") {
         if (updateInProgress) return
         updateInProgress = true
         val dialog = ProgressDialog(this).apply {
@@ -452,8 +504,8 @@ class LoginActivity : Activity() {
                 val dir = File(cacheDir, "update").apply { mkdirs() }
                 val out = File(dir, "freecast-${System.currentTimeMillis()}.apk")
                 val client = OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(120, TimeUnit.SECONDS)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(20, TimeUnit.SECONDS)
                     .followRedirects(true)
                     .build()
                 client.newCall(Request.Builder().url(url).build()).execute().use { resp ->
@@ -489,8 +541,7 @@ class LoginActivity : Activity() {
                 if (f != null) {
                     installApk(f)
                 } else {
-                    android.widget.Toast.makeText(this, "下载失败：$error", android.widget.Toast.LENGTH_LONG).show()
-                    exitForNoUpdate()
+                    showDownloadFailedDialog(error, fallbackLink.ifBlank { url })
                 }
             }
         }.start()
