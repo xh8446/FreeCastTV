@@ -197,8 +197,8 @@ class MainActivity : Activity(), CastEngine.Listener {
                     onTrialExhausted()
                     return
                 }
-                // 单次投屏试用上限 20 分钟
-                if (castStartedAt > 0L) {
+                // 单次投屏试用上限 20 分钟（测试阶段不限）
+                if (BuildFlags.PAYMENT_ENABLED && castStartedAt > 0L) {
                     val played = (android.os.SystemClock.elapsedRealtime() - castStartedAt) / 1000
                     if (played >= LicenseManager.PER_CAST_SECONDS && !perCastLimitHit) {
                         perCastLimitHit = true
@@ -716,8 +716,9 @@ class MainActivity : Activity(), CastEngine.Listener {
 
         // 底部进度条由点击画面 / OK 键呼出，2 秒后自动隐藏（不再常显）
 
-        // 水印：未开通会员且不在 5 天免费期内时显示
-        val showWatermark = LicenseManager.status.loaded &&
+        // 水印：未开通会员且不在 5 天免费期内时显示（测试阶段一律不显示）
+        val showWatermark = BuildFlags.PAYMENT_ENABLED &&
+            LicenseManager.status.loaded &&
             !LicenseManager.status.memberActive &&
             !LicenseManager.status.trialFree
         watermarks.forEach { it.visibility = if (showWatermark) View.VISIBLE else View.GONE }

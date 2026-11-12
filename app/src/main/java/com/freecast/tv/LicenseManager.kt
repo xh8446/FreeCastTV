@@ -143,14 +143,8 @@ object LicenseManager {
      */
     fun onCastStarted(onBlocked: () -> Unit, onDailyLimit: (() -> Unit)? = null) {
         if (status.memberActive) return
-        // 调试期只在本地扣减，不写云端
-        if (!BuildFlags.PAYMENT_ENABLED) {
-            status = status.copy(castsLeft = (status.castsLeft - 1).coerceAtLeast(0))
-            if (status.castsLeft <= 0 || status.secondsLeft <= 0) {
-                handler.post(onBlocked)
-            }
-            return
-        }
+        // 测试阶段：不限次数、不限时长，直接放行
+        if (!BuildFlags.PAYMENT_ENABLED) return
         CloudApi.post(
             JSONObject().put("action", "trial_use").put("deviceId", DeviceInfo.uuid)
         ) { json ->
@@ -182,10 +176,8 @@ object LicenseManager {
     /** 试用期播放时长上报（秒），服务端累计；免费期内不上报 */
     fun reportTime(seconds: Int) {
         if (status.memberActive || status.trialFree) return
-        if (!BuildFlags.PAYMENT_ENABLED) {
-            status = status.copy(secondsLeft = (status.secondsLeft - seconds).coerceAtLeast(0))
-            return
-        }
+        // 测试阶段：不计时，永不超时
+        if (!BuildFlags.PAYMENT_ENABLED) return
         CloudApi.post(
             JSONObject()
                 .put("action", "trial_time")

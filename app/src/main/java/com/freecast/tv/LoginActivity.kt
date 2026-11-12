@@ -150,6 +150,24 @@ class LoginActivity : Activity() {
             findViewById<TextView>(R.id.login_push).setOnClickListener {
                 startActivity(Intent(this, PushActivity::class.java))
             }
+            // 「直接试用」高亮呼吸闪烁，引导用户先试用
+            findViewById<TextView>(R.id.login_skip)?.let { skip ->
+                val blink = android.animation.ObjectAnimator.ofFloat(skip, "alpha", 1f, 0.35f).apply {
+                    duration = 700L
+                    repeatMode = android.animation.ValueAnimator.REVERSE
+                    repeatCount = android.animation.ValueAnimator.INFINITE
+                    start()
+                }
+                skip.setOnFocusChangeListener { _, hasFocus ->
+                    // 聚焦时停止闪烁并保持全亮，避免遥控操作时看不清
+                    if (hasFocus) {
+                        blink.cancel()
+                        skip.alpha = 1f
+                    } else {
+                        blink.start()
+                    }
+                }
+            }
             Trace.log("LoginActivity", "onCreate fully initialized OK")
 
             // 记住上次登录成功的账号密码：返回首页时自动回填，直接点登录即可进入

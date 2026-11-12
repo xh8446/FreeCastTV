@@ -38,7 +38,7 @@ class SsdpServer(
         private const val PORT = 1900
         private const val DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaRenderer:1"
         private const val MAX_AGE = 1800
-        private const val NOTIFY_INTERVAL_MS = 3 * 60 * 1000L
+        private const val NOTIFY_INTERVAL_MS = 20 * 1000L
     }
 
     private class Candidate(
