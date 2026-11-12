@@ -60,20 +60,29 @@ class CastService : Service(), CastEngine.Listener {
 
     override fun onCreate() {
         super.onCreate()
-        isRunning = true
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-        createChannel()
-        startForeground(NOTIFICATION_ID, buildNotification(notificationText()))
-        acquireWakeLock()
-        CastEngine.init(this)
-        CastEngine.addListener(this)
-        // 开机自启时网络可能还没就绪，定时检查并在网络变化时重建 SSDP
-        netHandler.postDelayed(netCheck, 4000L)
-        registerNetworkCallback()
+        // 服务初始化任何异常都不能让进程崩掉：崩了等于开机自启失效、打开 App 黑屏闪退
+        try {
+            isRunning = true
+            notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            createChannel()
+            startForeground(NOTIFICATION_ID, buildNotification(notificationText()))
+            acquireWakeLock()
+            CastEngine.init(this)
+            CastEngine.addListener(this)
+            // 开机自启时网络可能还没就绪，定时检查并在网络变化时重建 SSDP
+            netHandler.postDelayed(netCheck, 4000L)
+            registerNetworkCallback()
+        } catch (t: Throwable) {
+            Log.w(TAG, "service init failed", t)
+            try { Trace.error("CastService", t) } catch (_: Throwable) {}
+        }
     }
 
     /** 网络恢复（开机后连上 Wi-Fi / 网线）立刻重建发现服务，避免「软件没开搜不到」 */
     private fun registerNetworkCallback() {
+        // registerDefaultNetworkCallback 需要 API 24；老设备（Android 5/6）直接跳过，
+        // 否则 NoSuchMethodError 会崩掉整个进程（TV 打开就黑屏的元凶）
+        if (android.os.Build.VERSION.SDK_INT < 24) return
         try {
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager ?: return
             val callback = object : android.net.ConnectivityManager.NetworkCallback() {
@@ -81,16 +90,16 @@ class CastService : Service(), CastEngine.Listener {
                     netHandler.postDelayed({
                         try {
                             if (httpServer == null) startServers() else checkNetwork()
-                        } catch (e: Exception) {
-                            Log.w(TAG, "restart after network available failed", e)
+                        } catch (t: Throwable) {
+                            Log.w(TAG, "restart after network available failed", t)
                         }
                     }, 1500L)
                 }
             }
             cm.registerDefaultNetworkCallback(callback)
             networkCallback = callback
-        } catch (e: Exception) {
-            Log.w(TAG, "register network callback failed", e)
+        } catch (t: Throwable) {
+            Log.w(TAG, "register network callback failed", t)
         }
     }
 

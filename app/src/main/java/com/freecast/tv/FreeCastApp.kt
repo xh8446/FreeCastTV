@@ -100,6 +100,9 @@ class FreeCastApp : Application() {
             Log.e("FreeCastApp", "CastEngine.init FAILED", e)
         }
 
+        // 启动后上报本机诊断日志（每小时最多一次），方便远程排查 TV 黑屏等问题
+        try { DiagUpload.maybeUpload(this) } catch (_: Throwable) {}
+
         Trace.log("FreeCastApp", "onCreate done")
     }
 
