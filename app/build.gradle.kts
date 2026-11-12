@@ -11,8 +11,8 @@ android {
         applicationId = "com.freecast.tv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 300
-        versionName = "3.0"
+        versionCode = 301
+        versionName = "3.01"
     }
 
     signingConfigs {

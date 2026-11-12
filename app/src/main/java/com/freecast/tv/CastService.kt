@@ -14,6 +14,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import com.freecast.tv.upnp.SoapHandler
+import com.freecast.tv.upnp.DiscoveryProbe
 import com.freecast.tv.upnp.SsdpServer
 import com.freecast.tv.upnp.UpnpHttpServer
 
@@ -40,6 +41,7 @@ class CastService : Service(), CastEngine.Listener {
 
     private var httpServer: UpnpHttpServer? = null
     private var ssdpServer: SsdpServer? = null
+    private var discoveryProbe: DiscoveryProbe? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: android.net.wifi.WifiManager.WifiLock? = null
     private var networkCallback: android.net.ConnectivityManager.NetworkCallback? = null
@@ -133,6 +135,11 @@ class CastService : Service(), CastEngine.Listener {
         }
         ssdpServer = null
         httpServer = null
+        try {
+            discoveryProbe?.stop()
+        } catch (_: Exception) {
+        }
+        discoveryProbe = null
         releaseWakeLock()
         isRunning = false
         super.onDestroy()
@@ -168,6 +175,14 @@ class CastService : Service(), CastEngine.Listener {
             uuid = DeviceInfo.uuid,
             locationProvider = { DeviceInfo.locationUrl() }
         ).also { it.start() }
+
+        // 诊断用：同时监听 mDNS / 乐联 / 当贝cast 等非 DLNA 发现协议
+        try {
+            discoveryProbe?.stop()
+            discoveryProbe = DiscoveryProbe(this).also { it.start() }
+        } catch (t: Throwable) {
+            Log.w(TAG, "discovery probe failed", t)
+        }
 
         updateNotification(true)
     }
