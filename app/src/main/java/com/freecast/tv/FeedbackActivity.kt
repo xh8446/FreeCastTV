@@ -38,6 +38,7 @@ class FeedbackActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_feedback)
+        AppMode.applyStatusBarTopPadding(this)
 
         contactInput = findViewById(R.id.feedback_contact)
         contentInput = findViewById(R.id.feedback_content)

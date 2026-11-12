@@ -51,6 +51,26 @@ object AppMode {
 
     fun flavor(ctx: Context): String = if (isTv(ctx)) "tv" else "touch"
 
+    /**
+     * 触屏设备：给页面根部整体加一个状态栏高度的顶部内边距，
+     * 让顶部按键下移，不再顶到屏幕最上沿。TV 无状态栏，直接跳过。
+     */
+    fun applyStatusBarTopPadding(activity: android.app.Activity) {
+        if (isTv(activity)) return
+        try {
+            val res = activity.resources
+            val id = res.getIdentifier("status_bar_height", "dimen", "android")
+            val h = if (id > 0) res.getDimensionPixelSize(id) else (24 * res.displayMetrics.density).toInt()
+            if (h <= 0) return
+            val content = activity.findViewById<android.view.ViewGroup>(android.R.id.content) ?: return
+            content.post {
+                val root = content.getChildAt(0) ?: return@post
+                if (root.paddingTop < h) root.setPadding(0, h, 0, 0)
+            }
+        } catch (_: Throwable) {
+        }
+    }
+
     val isEmulator: Boolean by lazy {
         (Build.FINGERPRINT.contains("generic") || Build.MODEL.contains("Emulator") ||
             Build.MODEL.contains("SDK") || Build.MODEL.contains("sdk_gphone"))

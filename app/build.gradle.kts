@@ -11,8 +11,8 @@ android {
         applicationId = "com.freecast.tv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 245
-        versionName = "2.45"
+        versionCode = 246
+        versionName = "2.46"
     }
 
     signingConfigs {
@@ -28,9 +28,9 @@ android {
 
     buildTypes {
         release {
-            // 恢复混淆 + 资源压缩（体积减半）；TV 崩溃已通过主题修复解决
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // R8 在 TV 上会导致启动黑屏（v2.40 与 v2.44/2.45 两次复现），保持关闭
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

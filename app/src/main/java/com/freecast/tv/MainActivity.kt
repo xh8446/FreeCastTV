@@ -244,6 +244,7 @@ class MainActivity : Activity(), CastEngine.Listener {
 
         Trace.log("MainActivity", "about to setContentView")
         setContentView(R.layout.activity_main)
+        AppMode.applyStatusBarTopPadding(this)
         Trace.log("MainActivity", "setViewContent OK")
 
         // 每个 view 都用 findViewByIdOrNull，缺失就跳过不崩

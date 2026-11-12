@@ -79,6 +79,7 @@ class PushActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_push)
+        AppMode.applyStatusBarTopPadding(this)
 
         qrImage = findViewById(R.id.push_qr)
         urlText = findViewById(R.id.push_url)

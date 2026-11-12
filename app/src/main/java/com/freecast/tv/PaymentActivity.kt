@@ -72,6 +72,7 @@ class PaymentActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_payment)
+        AppMode.applyStatusBarTopPadding(this)
 
         tiersLayout = findViewById(R.id.pay_tiers)
         amountText = findViewById(R.id.pay_amount)
