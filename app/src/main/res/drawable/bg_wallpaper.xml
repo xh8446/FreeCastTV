@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 竖屏壁纸：深邃纵向星云，顶部极光蓝 + 底部暖光 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底色 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="180"
+                android:startColor="#FF040914"
+                android:centerColor="#FF081224"
+                android:endColor="#FF0A081C"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- 顶部极光 -->
+    <item android:left="-100dp" android:top="-160dp" android:right="-100dp" android:bottom="-500dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#2E3D7BFF"
+                android:centerColor="#143D7BFF"
+                android:endColor="#00000000"
+                android:gradientRadius="600dp"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- 底部暖紫 -->
+    <item android:left="-200dp" android:top="-500dp" android:right="-200dp" android:bottom="-80dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#226B4BFF"
+                android:centerColor="#0D6B4BFF"
+                android:endColor="#00000000"
+                android:gradientRadius="600dp"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- 右侧柔光 -->
+    <item android:left="-500dp" android:top="-300dp" android:right="-60dp" android:bottom="-200dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#164FC3F7"
+                android:centerColor="#064FC3F7"
+                android:endColor="#00000000"
+                android:gradientRadius="400dp"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

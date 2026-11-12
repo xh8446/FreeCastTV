@@ -1,0 +1,13 @@
+/app/build/
+/local.properties
+/.gradle/
+*.iml
+.idea/
+/build/
+/app/release/
+*.apk
+!app/release/app-debug.apk
+.gradle/
+*.keystore
+*.jks
+.DS_Store

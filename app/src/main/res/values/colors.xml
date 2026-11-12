@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色：深邃蓝渐变 -->
+    <color name="brand_primary">#3D7BFF</color>
+    <color name="brand_primary_dark">#1A3A80</color>
+    <color name="brand_primary_light">#6FA1FF</color>
+    <color name="brand_accent">#4FC3F7</color>
+
+    <!-- 中性色 -->
+    <color name="surface_background">#060D1A</color>
+    <color name="surface_panel">#CC142036</color>
+    <color name="surface_card">#E01E2E4A</color>
+    <color name="surface_input">#33FFFFFF</color>
+
+    <!-- 文字 -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#CCFFFFFF</color>
+    <color name="text_hint">#B3FFFFFF</color>
+    <color name="text_disabled">#66FFFFFF</color>
+
+    <!-- 状态 -->
+    <color name="state_success">#4ADE80</color>
+    <color name="state_warning">#FBBF24</color>
+    <color name="state_error">#FF6B6B</color>
+
+    <!-- 兼容旧引用 -->
+    <color name="accent">#4FC3F7</color>
+    <color name="hint">#B3FFFFFF</color>
+    <color name="gold">#FFD700</color>
+</resources>

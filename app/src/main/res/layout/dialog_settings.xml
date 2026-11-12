@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="8dp">
+
+        <!-- 软件名称与版本号同一行 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/settings_app"
+                style="@style/SettingsLine"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/settings_app" />
+
+            <TextView
+                android:id="@+id/settings_version"
+                style="@style/SettingsLine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp" />
+        </LinearLayout>
+
+        <!-- 账号与邀请统计同一行 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/settings_account"
+                style="@style/SettingsLine"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/settings_account" />
+
+            <TextView
+                android:id="@+id/settings_invite_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:textColor="@color/hint"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/settings_member"
+            style="@style/SettingsLine" />
+
+        <TextView
+            android:id="@+id/settings_device"
+            style="@style/SettingsLine" />
+
+        <TextView
+            android:id="@+id/settings_announcement"
+            style="@style/SettingsLine"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/settings_update"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_focus_primary"
+                android:focusable="true"
+                android:text="@string/settings_check_update"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/settings_auth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_focus_primary"
+                android:focusable="true"
+                android:text="@string/settings_logout"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/settings_pay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_focus_primary"
+            android:focusable="true"
+            android:text="@string/settings_pay"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/settings_share"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_focus_primary"
+            android:focusable="true"
+            android:text="@string/settings_share"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/settings_feedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_focus_primary"
+            android:focusable="true"
+            android:text="@string/settings_feedback"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF" />
+
+        <!-- 备案号：设置页最底部，小字号 -->
+        <TextView
+            android:id="@+id/settings_icp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:textColor="#80FFFFFF"
+            android:textSize="11sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

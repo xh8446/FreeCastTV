@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 播放三角（PlayerView 会在运行时自动换成暂停图标 — 但我们的自定义 controller 没设，就用静态播放） -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,5v14l11,-7z" />
+</vector>

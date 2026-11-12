@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/push_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_wallpaper"
+    android:orientation="vertical"
+    android:keepScreenOn="true">
+
+    <!-- 顶部：左上角返回 -->
+    <Button
+        android:id="@+id/push_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_speed"
+        android:minWidth="96dp"
+        android:paddingStart="22dp"
+        android:paddingEnd="22dp"
+        android:text="@string/action_back"
+        android:textAllCaps="false"
+        android:textColor="@color/accent" />
+
+    <LinearLayout
+        android:id="@+id/push_body"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <!-- 左侧：扫码 / 网址 -->
+        <LinearLayout
+            android:id="@+id/push_left"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/push_title"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/push_hint"
+                android:textColor="@color/hint"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:id="@+id/push_qr"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_marginTop="18dp"
+                android:background="#FFFFFF"
+                android:contentDescription="@string/push_title" />
+
+            <TextView
+                android:id="@+id/push_url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:focusable="false"
+                android:textColor="@color/accent"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/push_ips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:focusable="false"
+                android:gravity="center"
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 右侧：接收进度与文件列表 -->
+        <LinearLayout
+            android:id="@+id/push_right"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.2"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ListView
+                    android:id="@+id/push_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:divider="#22FFFFFF"
+                    android:dividerHeight="1dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:listSelector="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/push_empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/push_empty"
+                    android:textColor="@color/hint"
+                    android:textSize="15sp" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 列表项/等待投屏项：琥珀金色焦点 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape>
+                    <solid android:color="#FFD166" />
+                    <corners android:radius="14dp" />
+                </shape>
+            </item>
+            <item
+                android:left="2dp"
+                android:top="2dp"
+                android:right="2dp"
+                android:bottom="2dp">
+                <shape>
+                    <solid android:color="#FF1A3A6B" />
+                    <corners android:radius="12dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#FF1A2F55" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#12294A" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>
