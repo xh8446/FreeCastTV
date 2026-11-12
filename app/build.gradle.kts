@@ -11,8 +11,8 @@ android {
         applicationId = "com.freecast.tv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 243
-        versionName = "2.43"
+        versionCode = 244
+        versionName = "2.44"
     }
 
     signingConfigs {
@@ -28,9 +28,9 @@ android {
 
     buildTypes {
         release {
-            // 临时关闭混淆和资源压缩，排查 TV 上 InflateException
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // 恢复混淆 + 资源压缩（体积减半）；TV 崩溃已通过主题修复解决
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

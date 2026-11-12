@@ -522,34 +522,74 @@ class MainActivity : Activity(), CastEngine.Listener {
 
     override fun onStart() {
         super.onStart()
+        FreeCastApp.mainVisible = true
         CastEngine.addListener(this)
     }
 
     override fun onResume() {
         super.onResume()
-        // 从设置对话框 / 其他页面返回后重新绑定画面，避免只有声音没有画面
-        if (::playerView.isInitialized) CastEngine.attachView(playerView)
+        // 取消「切后台才暂停」的延迟任务：从会员/反馈/设置等页面返回时不暂停
+        hideHandler.removeCallbacks(pauseIfBackground)
+        // 只有视图尚未绑定播放器时才重新绑定，避免每次返回都重建 Surface 造成几秒卡顿
+        if (::playerView.isInitialized && playerView.player == null) CastEngine.attachView(playerView)
         // 从会员/反馈等页面切回播放画面：恢复音量并继续播放
         if (pausedForLeave) {
             pausedForLeave = false
             try { CastEngine.resumeFromLeave() } catch (_: Throwable) {}
         }
         startChatPolling()
+        ensureOverlayPermissionOnce()
         // 车机/触屏：返回后重新进入全屏，隐藏底部导航栏
         try { enterImmersiveMode() } catch (_: Throwable) {}
         hideHandler.postDelayed({ try { enterImmersiveMode() } catch (_: Throwable) {} }, 800L)
     }
 
+    /** 延迟判断：只有真正离开本应用（没有其他本应用页面在前台）时才暂停并静音。
+     *  进入会员/帮助与反馈等自有页面时不暂停，返回播放画面零等待。 */
+    private val pauseIfBackground = Runnable {
+        if (FreeCastApp.appVisible) return@Runnable
+        try {
+            if (CastEngine.isPlayingNow()) {
+                CastEngine.pauseAndMute()
+                pausedForLeave = true
+            }
+        } catch (_: Throwable) {}
+    }
+
+    /** Android 10+ 后台拉不起 Activity：引导用户开启「显示在其他应用上层」，
+     *  这样未打开软件时收到投屏也能自动弹出播放画面。只提示一次。 */
+    private fun ensureOverlayPermissionOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        if (android.provider.Settings.canDrawOverlays(this)) return
+        val prefs = getSharedPreferences("freecast", MODE_PRIVATE)
+        if (prefs.getBoolean("overlay_asked", false)) return
+        prefs.edit().putBoolean("overlay_asked", true).apply()
+        try {
+            AlertDialog.Builder(this, R.style.DialogTheme)
+                .setTitle("开启后台自动跳转")
+                .setMessage("开启「显示在其他应用上层」后，即使星投屏没打开，手机投屏时也会自动弹出播放画面（现在只有声音）。")
+                .setPositiveButton("去开启") { _, _ ->
+                    try {
+                        startActivity(
+                            Intent(
+                                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                    } catch (_: Exception) {}
+                }
+                .setNegativeButton("以后再说", null)
+                .show()
+        } catch (_: Throwable) {}
+    }
+
     override fun onPause() {
         super.onPause()
-        // 离开播放画面（会员、帮助与反馈、切其他 App）立即暂停并静音，避免后台继续出声
+        // 离开播放画面（切其他 App / 锁屏）才暂停并静音；
+        // 进入本应用的会员、帮助与反馈页面不暂停，返回时不卡顿
         if (!isFinishing) {
-            try {
-                if (CastEngine.isPlayingNow()) {
-                    CastEngine.pauseAndMute()
-                    pausedForLeave = true
-                }
-            } catch (_: Throwable) {}
+            hideHandler.removeCallbacks(pauseIfBackground)
+            hideHandler.postDelayed(pauseIfBackground, 700L)
         }
     }
 
@@ -563,6 +603,7 @@ class MainActivity : Activity(), CastEngine.Listener {
     }
 
     override fun onStop() {
+        FreeCastApp.mainVisible = false
         stopChatPolling()
         CastEngine.removeListener(this)
         // 不再因切后台/锁屏暂停：TV 自己拉流解码，手机端退出、切后台、锁屏都不影响接收端播放

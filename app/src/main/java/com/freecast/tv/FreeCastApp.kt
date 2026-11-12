@@ -1,7 +1,9 @@
 package com.freecast.tv
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import java.io.File
@@ -34,6 +36,25 @@ class FreeCastApp : Application() {
 
         Trace.init(this)
         Trace.log("FreeCastApp", "onCreate start")
+
+        // 跟踪应用是否真正在前台：用于「切到其他 App 才暂停播放」和「后台收到投屏自动拉起播放页」
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityStarted(activity: Activity) {
+                startedCount++
+                appVisible = true
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                startedCount = (startedCount - 1).coerceAtLeast(0)
+                if (startedCount == 0) appVisible = false
+            }
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityResumed(activity: Activity) {}
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
 
         try {
             val prefs = getSharedPreferences("freecast", MODE_PRIVATE)
@@ -121,6 +142,17 @@ class FreeCastApp : Application() {
         /** 用户主动从播放页返回的时间戳：短时间内禁止「有新投屏就自动跳回播放页」，避免返回被弹回 */
         @Volatile
         var playerExitAt = 0L
+
+        /** 应用是否有任一页面处于前台可见状态 */
+        @Volatile
+        var appVisible = false
+            private set
+
+        /** 播放页（MainActivity）是否在前台 */
+        @Volatile
+        var mainVisible = false
+
+        private var startedCount = 0
 
         fun isActivated(context: Context): Boolean =
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

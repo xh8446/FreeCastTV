@@ -41,6 +41,7 @@ class CastService : Service(), CastEngine.Listener {
     private var httpServer: UpnpHttpServer? = null
     private var ssdpServer: SsdpServer? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: android.net.wifi.WifiManager.WifiLock? = null
     private var notificationManager: NotificationManager? = null
     private var lastNotificationText: String = ""
     private val netHandler = Handler(Looper.getMainLooper())
@@ -163,8 +164,38 @@ class CastService : Service(), CastEngine.Listener {
         ).also { it.start() }
     }
 
+    private var lastLaunchedUri: String? = null
+
     override fun onStateChanged(state: CastEngine.State) {
         updateNotification(false)
+        // 软件未打开（后台服务在跑）时收到投屏：自动拉起播放界面，
+        // 否则只有声音没有画面。用户刚主动返回播放页的 5 秒内不弹回。
+        val uri = state.uri
+        if (state.hasMedia && !uri.isNullOrBlank() && uri != lastLaunchedUri) {
+            lastLaunchedUri = uri
+            val recentlyExited = System.currentTimeMillis() - FreeCastApp.playerExitAt < 5000L
+            if (!FreeCastApp.mainVisible && !recentlyExited) {
+                openPlayer()
+            }
+        } else if (!state.hasMedia) {
+            lastLaunchedUri = null
+        }
+    }
+
+    private fun openPlayer() {
+        try {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
+            }
+            startActivity(intent)
+            Log.i(TAG, "cast arrived, launch player activity")
+        } catch (e: Exception) {
+            Log.w(TAG, "launch player failed", e)
+        }
     }
 
     private fun notificationText(): String {
@@ -240,6 +271,17 @@ class CastService : Service(), CastEngine.Listener {
         } catch (e: Exception) {
             Log.w(TAG, "wake lock failed", e)
         }
+        // 保持 Wi-Fi 高性能模式：TV/车机待机时 Wi-Fi 省电会丢弃组播包，
+        // 导致手机端搜不到设备
+        try {
+            val wifi = applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+            wifiLock = wifi?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "freecast:wifi")?.apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "wifi lock failed", e)
+        }
     }
 
     private fun releaseWakeLock() {
@@ -248,5 +290,10 @@ class CastService : Service(), CastEngine.Listener {
         } catch (_: Exception) {
         }
         wakeLock = null
+        try {
+            wifiLock?.release()
+        } catch (_: Exception) {
+        }
+        wifiLock = null
     }
 }
