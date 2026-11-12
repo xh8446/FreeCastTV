@@ -152,9 +152,9 @@
     <string name="trial_info">试用：还可投屏 %1$d 次 · 剩余 %2$d 分钟</string>
     <string name="trial_exhausted">免费试用已用完，请激活后继续使用</string>
     <string name="trial_daily_limit_title">今日免费次数已用完</string>
-    <string name="trial_daily_limit_msg">装机后 5 天免费期内每天可投屏 5 次，明天可继续免费使用；开通会员后不限次数、无水印。</string>
+    <string name="trial_daily_limit_msg">装机后 5 天免费期内每天可投屏 5 次，明天可继续免费使用；测试阶段不限次数、无水印。</string>
     <string name="trial_daily_limit_ok">明天再来</string>
-    <string name="trial_per_cast_limited">本次试用已达 20 分钟，开通会员后可继续观看</string>
+    <string name="trial_per_cast_limited">本次试用已达 20 分钟，测试阶段可继续观看</string>
 
     <string name="pay_title">开通会员</string>
     <string name="pay_hint">扫码支付后，联系作者 QQ：84461502\n告知所选档位与支付截图，获取激活码</string>

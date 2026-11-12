@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
@@ -136,7 +137,9 @@ class LoginActivity : Activity() {
                         .show()
                 }
             }
-            findViewById<TextView>(R.id.login_share).setOnClickListener {
+            // 测试阶段：隐藏「分享免费投」邀请入口（不可见 = TV/触屏都无法聚焦）
+            findViewById<TextView>(R.id.login_share)?.visibility = View.GONE
+            findViewById<TextView>(R.id.login_share)?.setOnClickListener {
                 InviteShare.show(this, FreeCastApp.sessionToken(this)) {
                     android.widget.Toast.makeText(
                         this, "请先在上方登录或注册，登录后即可生成邀请二维码",
@@ -414,7 +417,7 @@ class LoginActivity : Activity() {
         val changelog = json.optString("changelog").ifBlank { "请更新到最新版本后继续使用" }
         AlertDialog.Builder(this, R.style.DialogTheme)
             .setTitle(if (versionName.isBlank()) "发现新版本" else "发现新版本 $versionName")
-            .setMessage("$changelog\n\n自动下载卡住不动时，请点「手动下载」用浏览器打开备用地址。")
+            .setMessage("$changelog\n\n自动下载卡住不动时，请点「手动下载」用浏览器打开备用地址。\n备用地址（蓝奏云）提取码：yyxh")
             .setCancelable(false)
             .setPositiveButton("自动更新") { _, _ ->
                 if (url.isBlank()) {
@@ -438,14 +441,14 @@ class LoginActivity : Activity() {
         }
         try {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
-            android.widget.Toast.makeText(this, "已用浏览器打开下载页，下载后安装即可", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, "已用浏览器打开下载页（提取码 yyxh），下载后安装即可", android.widget.Toast.LENGTH_LONG).show()
         } catch (_: Exception) {
             try {
                 val cm = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText("update_url", link))
                 AlertDialog.Builder(this, R.style.DialogTheme)
                     .setTitle("无法打开浏览器")
-                    .setMessage("本机没有可用浏览器。下载地址已复制到剪贴板：\n\n$link")
+                    .setMessage("本机没有可用浏览器。下载地址已复制到剪贴板（提取码 yyxh）：\n\n$link")
                     .setCancelable(false)
                     .setPositiveButton("退出软件") { _, _ -> exitForNoUpdate() }
                     .show()
@@ -463,7 +466,7 @@ class LoginActivity : Activity() {
         }
         AlertDialog.Builder(this, R.style.DialogTheme)
             .setTitle("自动更新失败")
-            .setMessage("原因：$error\n\n可点「手动下载」用浏览器打开备用地址（蓝奏云）更新。")
+            .setMessage("原因：$error\n\n可点「手动下载」用浏览器打开备用地址（蓝奏云）更新。\n备用地址提取码：yyxh")
             .setCancelable(false)
             .setPositiveButton("手动下载") { _, _ -> openUpdatePage(link) }
             .setNeutralButton("重试") { _, _ ->

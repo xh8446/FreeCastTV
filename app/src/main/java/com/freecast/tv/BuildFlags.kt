@@ -8,6 +8,6 @@ package com.freecast.tv
  * 最终版调试完成后改为 true 即恢复正式商业逻辑。
  */
 object BuildFlags {
-    /** 会员/付费/激活入口开关：true = 保留全部商业功能（当前版本） */
-    const val PAYMENT_ENABLED = true
+    /** 会员/付费/激活入口开关：false = 全部隐藏（当前测试阶段），true = 恢复正式商业功能 */
+    const val PAYMENT_ENABLED = false
 }
